@@ -9,6 +9,7 @@
 }
 
 .board {
+  display: flex;
   width: 630px;
   height: 630px;
 }
@@ -18,7 +19,6 @@
 }
 
 .cell {
-  float: left;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -29,6 +29,16 @@
 }
 
 .stone {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   width: 28px;
   height: 28px;
+}
+
+.player {
+  width: 15px;
+  height: 15px;
+  background-color: red;
+  border-radius: 50%;
 }
