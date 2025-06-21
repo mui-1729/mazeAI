@@ -15,15 +15,8 @@ export default function Home() {
     x: 0,
     y: 0,
     direction: 'south',
-    directions: { east: [0, 1], north: [-1, 0], west: [0, -1], south: [1, 0] },
+    directions: { north: [-1, 0], east: [0, 1], south: [1, 0], west: [0, -1] },
   });
-
-  const turnRight: Record<Direction, Direction> = {
-    north: 'west',
-    east: 'north',
-    south: 'east',
-    west: 'south',
-  };
 
   const firstBoard = [
     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -52,23 +45,29 @@ export default function Home() {
   const [board, setBoard] = useState<number[][]>(firstBoard);
   const [seconds, setSeconds] = useState(0);
 
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setSeconds((prevSeconds) => prevSeconds + 1);
-    }, 1000);
+  let isFinished = false;
 
-    return () => {
-      clearInterval(timer);
-      setSeconds(0);
-    };
-  }, [board]);
+  if (userState.x === 20 && userState.y === 20) {
+    isFinished = true;
+  }
 
-  const resetHandler = () => {
-    const copyBoard = structuredClone(firstBoard);
-    const newBoard = structuredClone(copyBoard);
+  const resetBoard = () => {
+    mkBoard();
+    isFinished = false;
+    setUserState({
+      x: 0,
+      y: 0,
+      direction: 'south',
+      directions: { north: [-1, 0], east: [0, 1], south: [1, 0], west: [0, -1] },
+    });
+    setSeconds(0);
+  };
+
+  const mkBoard = () => {
+    const newBoard = structuredClone(firstBoard);
     for (let y = 0; y < newBoard.length; y++) {
       for (let x = 0; x < newBoard[y].length; x++) {
-        if (copyBoard[y][x] === 1) {
+        if (firstBoard[y][x] === 1) {
           const value = Math.floor(Math.random() * 4);
           if (value === 0 && y > 0) {
             newBoard[y - 1][x] = 1;
@@ -83,80 +82,67 @@ export default function Home() {
       }
     }
     setBoard(newBoard);
-    setUserState({
-      x: 0,
-      y: 0,
-      direction: 'south',
-      directions: { east: [0, 1], north: [-1, 0], west: [0, -1], south: [1, 0] },
-    });
   };
 
   useEffect(() => {
-    resetHandler();
+    if (isFinished === true) return;
+    const timer = setInterval(() => {
+      setSeconds((prevSeconds) => prevSeconds + 1);
+    }, 1000);
+
+    return () => {
+      clearInterval(timer);
+    };
+  }, [isFinished]);
+
+  useEffect(() => {
+    mkBoard();
   }, []);
 
-  const nextMass = () => {
-    const { x, y, direction, directions } = userState;
-    const strDirections: Direction[] = ['north', 'east', 'south', 'west'];
-    const currentDirection = strDirections.indexOf(direction);
-
-    const rotate = (idx: number) => (idx + 4) % 4;
-
-    const rightDir = strDirections[rotate(currentDirection + 1)];
-    const [rightDx, rightDy] = directions[rightDir];
-    const rightX = x + rightDx;
-    const rightY = y + rightDy;
-    console.log(rightDir);
-
-    if (
-      rightX >= 0 &&
-      rightX < board[0].length &&
-      rightY >= 0 &&
-      rightY < board.length &&
-      board[rightY][rightX] !== 1
-    ) {
-      setUserState((prev) => ({
-        ...prev,
-        direction: rightDir,
-        x: rightX,
-        y: rightY,
-      }));
-      return;
-    }
-
-    const [dx, dy] = directions[direction];
-    const frontX = x + dx;
-    const frontY = y + dy;
-
-    if (
-      frontX >= 0 &&
-      frontX < board[0].length &&
-      frontY >= 0 &&
-      frontY < board.length &&
-      board[frontY][frontX] !== 1
-    ) {
-      setUserState((prev) => ({
-        ...prev,
-        x: frontX,
-        y: frontY,
-      }));
-      return;
-    }
-
-    const leftDir = strDirections[rotate(currentDirection - 1)];
-    setUserState((prev) => ({
-      ...prev,
-      direction: leftDir,
-    }));
-  };
-
   useEffect(() => {
-    nextMass();
+    if (isFinished === true || seconds === 0) return;
+
+    setUserState((currentUserState) => {
+      const { x, y, direction, directions } = currentUserState;
+      const strDirections: Direction[] = ['north', 'east', 'south', 'west'];
+      const currentDirection = strDirections.indexOf(direction);
+
+      const rotate = (idx: number) => (idx + 4) % 4;
+
+      const directionsTOTry: Direction[] = [
+        strDirections[rotate(currentDirection - 1)],
+        strDirections[rotate(currentDirection)],
+        strDirections[rotate(currentDirection + 1)],
+        strDirections[rotate(currentDirection + 2)],
+      ];
+
+      for (const nextDir of directionsTOTry) {
+        const dx = directions[nextDir][1];
+        const dy = directions[nextDir][0];
+
+        if (
+          dx + x >= 0 &&
+          dx + x < board[0].length &&
+          dy + y >= 0 &&
+          dy + y < board.length &&
+          board[dy + y][dx + x] === 0
+        ) {
+          return {
+            ...currentUserState,
+            x: dx + x,
+            y: dy + y,
+            direction: nextDir,
+          };
+        }
+      }
+    });
   }, [seconds]);
 
   return (
     <div className={styles.container}>
-      <button onClick={() => resetHandler()}>りせっと</button>
+      <button className={styles.resetButton} onClick={resetBoard}>
+        りせっと
+      </button>
       <div className={styles.timer}>{seconds}秒</div>
       <div className={styles.board}>
         {board.map((row, y) => (

@@ -42,3 +42,9 @@
   background-color: red;
   border-radius: 50%;
 }
+
+.resetButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
