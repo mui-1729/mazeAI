@@ -5,19 +5,7 @@ import styles from './page.module.css';
 
 type Direction = 'west' | 'east' | 'north' | 'south';
 
-export default function Home() {
-  const [userState, setUserState] = useState<{
-    x: number;
-    y: number;
-    direction: Direction;
-    directions: Record<Direction, number[]>;
-  }>({
-    x: 0,
-    y: 0,
-    direction: 'south',
-    directions: { north: [0, -1], east: [1, 0], south: [0, 1], west: [-1, 0] },
-  });
-
+const mkBoard = () => {
   const firstBoard = [
     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
     [0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0],
@@ -41,47 +29,59 @@ export default function Home() {
     [0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0],
     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
   ];
-
-  const [board, setBoard] = useState<number[][]>(firstBoard);
-  const [seconds, setSeconds] = useState(0);
-
-  let isFinished = false;
-
-  if (userState.x === 20 && userState.y === 20) {
-    isFinished = true;
-  }
-
-  const resetBoard = () => {
-    mkBoard();
-    isFinished = false;
-    setUserState({
-      x: 0,
-      y: 0,
-      direction: 'south',
-      directions: { north: [0, -1], east: [1, 0], south: [0, 1], west: [-1, 0] },
-    });
-    setSeconds(0);
-  };
-
-  const mkBoard = () => {
-    const newBoard = structuredClone(firstBoard);
-    for (let y = 0; y < newBoard.length; y++) {
-      for (let x = 0; x < newBoard[y].length; x++) {
-        if (firstBoard[y][x] === 1) {
-          const value = Math.floor(Math.random() * 4);
-          if (value === 0 && y > 0) {
-            newBoard[y - 1][x] = 1;
-          } else if (value === 1 && y < newBoard.length - 1) {
-            newBoard[y + 1][x] = 1;
-          } else if (value === 2 && x > 0) {
-            newBoard[y][x - 1] = 1;
-          } else if (value === 3 && x < newBoard[y].length - 1) {
-            newBoard[y][x + 1] = 1;
-          }
+  const newBoard = structuredClone(firstBoard);
+  for (let y = 0; y < newBoard.length; y++) {
+    for (let x = 0; x < newBoard[y].length; x++) {
+      if (firstBoard[y][x] === 1) {
+        const value = Math.floor(Math.random() * 4);
+        if (value === 0 && y > 0) {
+          newBoard[y - 1][x] = 1;
+        } else if (value === 1 && y < newBoard.length - 1) {
+          newBoard[y + 1][x] = 1;
+        } else if (value === 2 && x > 0) {
+          newBoard[y][x - 1] = 1;
+        } else if (value === 3 && x < newBoard[y].length - 1) {
+          newBoard[y][x + 1] = 1;
         }
       }
     }
-    setBoard(newBoard);
+  }
+  return newBoard;
+};
+export default function Home() {
+  const [userState, setUserState] = useState<{
+    x: number;
+    y: number;
+    direction: Direction;
+    directions: Record<Direction, number[]>;
+  }>({
+    x: 0,
+    y: 0,
+    direction: 'south',
+    directions: { north: [0, -1], east: [1, 0], south: [0, 1], west: [-1, 0] },
+  });
+
+  const [board, setBoard] = useState<number[][]>([]);
+  const [seconds, setSeconds] = useState(0);
+
+  let isFinished = userState.x === 20 && userState.y === 20;
+
+  useEffect(() => {
+    setBoard(mkBoard());
+  }, []);
+
+  const resetBoard = () => {
+    setBoard(mkBoard());
+    isFinished = false;
+    setSeconds(0);
+    setTimeout(() => {
+      setUserState({
+        x: 0,
+        y: 0,
+        direction: 'south',
+        directions: { north: [0, -1], east: [1, 0], south: [0, 1], west: [-1, 0] },
+      });
+    }, 0);
   };
 
   useEffect(() => {
@@ -94,27 +94,6 @@ export default function Home() {
       clearInterval(timer);
     };
   }, [isFinished]);
-
-  useEffect(() => {
-    const newBoard = structuredClone(firstBoard);
-    for (let y = 0; y < newBoard.length; y++) {
-      for (let x = 0; x < newBoard[y].length; x++) {
-        if (firstBoard[y][x] === 1) {
-          const value = Math.floor(Math.random() * 4);
-          if (value === 0 && y > 0) {
-            newBoard[y - 1][x] = 1;
-          } else if (value === 1 && y < newBoard.length - 1) {
-            newBoard[y + 1][x] = 1;
-          } else if (value === 2 && x > 0) {
-            newBoard[y][x - 1] = 1;
-          } else if (value === 3 && x < newBoard[y].length - 1) {
-            newBoard[y][x + 1] = 1;
-          }
-        }
-      }
-    }
-    setBoard(newBoard);
-  }, []);
 
   useEffect(() => {
     if (isFinished === true || seconds === 0) return;
