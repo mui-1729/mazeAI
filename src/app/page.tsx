@@ -15,7 +15,7 @@ export default function Home() {
     x: 0,
     y: 0,
     direction: 'south',
-    directions: { north: [-1, 0], east: [0, 1], south: [1, 0], west: [0, -1] },
+    directions: { north: [0, -1], east: [1, 0], south: [0, 1], west: [-1, 0] },
   });
 
   const firstBoard = [
@@ -58,7 +58,7 @@ export default function Home() {
       x: 0,
       y: 0,
       direction: 'south',
-      directions: { north: [-1, 0], east: [0, 1], south: [1, 0], west: [0, -1] },
+      directions: { north: [0, -1], east: [1, 0], south: [0, 1], west: [-1, 0] },
     });
     setSeconds(0);
   };
@@ -71,11 +71,11 @@ export default function Home() {
           const value = Math.floor(Math.random() * 4);
           if (value === 0 && y > 0) {
             newBoard[y - 1][x] = 1;
-          } else if (value === 1 && newBoard.length - 1) {
+          } else if (value === 1 && y < newBoard.length - 1) {
             newBoard[y + 1][x] = 1;
           } else if (value === 2 && x > 0) {
             newBoard[y][x - 1] = 1;
-          } else if (value === 3 && newBoard[y].length - 1) {
+          } else if (value === 3 && x < newBoard[y].length - 1) {
             newBoard[y][x + 1] = 1;
           }
         }
@@ -96,7 +96,24 @@ export default function Home() {
   }, [isFinished]);
 
   useEffect(() => {
-    mkBoard();
+    const newBoard = structuredClone(firstBoard);
+    for (let y = 0; y < newBoard.length; y++) {
+      for (let x = 0; x < newBoard[y].length; x++) {
+        if (firstBoard[y][x] === 1) {
+          const value = Math.floor(Math.random() * 4);
+          if (value === 0 && y > 0) {
+            newBoard[y - 1][x] = 1;
+          } else if (value === 1 && y < newBoard.length - 1) {
+            newBoard[y + 1][x] = 1;
+          } else if (value === 2 && x > 0) {
+            newBoard[y][x - 1] = 1;
+          } else if (value === 3 && x < newBoard[y].length - 1) {
+            newBoard[y][x + 1] = 1;
+          }
+        }
+      }
+    }
+    setBoard(newBoard);
   }, []);
 
   useEffect(() => {
@@ -110,9 +127,9 @@ export default function Home() {
       const rotate = (idx: number) => (idx + 4) % 4;
 
       const directionsTOTry: Direction[] = [
-        strDirections[rotate(currentDirection - 1)],
-        strDirections[rotate(currentDirection)],
         strDirections[rotate(currentDirection + 1)],
+        strDirections[rotate(currentDirection)],
+        strDirections[rotate(currentDirection - 1)],
         strDirections[rotate(currentDirection + 2)],
       ];
 
@@ -127,6 +144,7 @@ export default function Home() {
           dy + y < board.length &&
           board[dy + y][dx + x] === 0
         ) {
+          console.log(nextDir);
           return {
             ...currentUserState,
             x: dx + x,
@@ -135,8 +153,9 @@ export default function Home() {
           };
         }
       }
+      return currentUserState;
     });
-  }, [seconds]);
+  }, [seconds, board, isFinished]);
 
   return (
     <div className={styles.container}>
@@ -156,7 +175,17 @@ export default function Home() {
                       className={styles.stone}
                       style={{ backgroundColor: cell === 1 ? 'black' : 'aqua' }}
                     >
-                      {isUser && <div className={styles.player} />}
+                      {isUser && (
+                        <div className={styles.player}>
+                          {userState.direction === 'east'
+                            ? '→'
+                            : userState.direction === 'west'
+                              ? '←'
+                              : userState.direction === 'north'
+                                ? '↑'
+                                : '↓'}
+                        </div>
+                      )}
                     </div>
                   </div>
                 );
