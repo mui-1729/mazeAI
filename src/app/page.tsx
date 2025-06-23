@@ -4,62 +4,98 @@ import { useEffect, useState } from 'react';
 import styles from './page.module.css';
 
 type Direction = 'west' | 'east' | 'north' | 'south';
+type UserState = {
+  x: number;
+  y: number;
+  direction: Direction;
+};
 
-const mkBoard = () => {
-  const firstBoard = [
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-  ];
-  const newBoard = structuredClone(firstBoard);
-  for (let y = 0; y < newBoard.length; y++) {
-    for (let x = 0; x < newBoard[y].length; x++) {
-      if (firstBoard[y][x] === 1) {
-        const value = Math.floor(Math.random() * 4);
-        if (value === 0 && y > 0) {
+const initialUserState: UserState = {
+  x: 0,
+  y: 0,
+  direction: 'south',
+};
+
+const directions: Record<Direction, [number, number]> = {
+  north: [0, -1],
+  east: [1, 0],
+  south: [0, 1],
+  west: [-1, 0],
+};
+
+const createInitialBoard = (): number[][] => {
+  const board: number[][] = [];
+  for (let y = 0; y < 21; y++) {
+    const row: number[] = [];
+    for (let x = 0; x < 21; x++) {
+      row.push(y % 2 === 1 && x % 2 === 1 ? 1 : 0);
+    }
+    board.push(row);
+  }
+  return board;
+};
+
+const expandBoard = (baseBoard: number[][]): number[][] => {
+  const newBoard = [...baseBoard];
+
+  for (let y = 0; y < baseBoard.length; y++) {
+    for (let x = 0; x < baseBoard[y].length; x++) {
+      if (baseBoard[y][x] === 1) {
+        const dir = Math.floor(Math.random() * 4);
+        if (dir === 0 && y > 0) {
           newBoard[y - 1][x] = 1;
-        } else if (value === 1 && y < newBoard.length - 1) {
+        } else if (dir === 1 && y < baseBoard.length - 1) {
           newBoard[y + 1][x] = 1;
-        } else if (value === 2 && x > 0) {
+        } else if (dir === 2 && x > 0) {
           newBoard[y][x - 1] = 1;
-        } else if (value === 3 && x < newBoard[y].length - 1) {
+        } else if (dir === 3 && x < baseBoard[y].length - 1) {
           newBoard[y][x + 1] = 1;
         }
       }
     }
   }
+
   return newBoard;
 };
+
+const getNextDirection = (currentDirection: Direction): Direction[] => {
+  const directionsOrder: Direction[] = ['north', 'east', 'south', 'west'];
+  const index = directionsOrder.indexOf(currentDirection);
+
+  return [
+    directionsOrder[(index + 1) % 4],
+    directionsOrder[index],
+    directionsOrder[(index + 3) % 4],
+    directionsOrder[(index + 2) % 4],
+  ];
+};
+
+const canMove = (x: number, y: number, board: number[][]): boolean => {
+  return y >= 0 && y < board.length && x >= 0 && x < board[0].length && board[y][x] === 0;
+};
+
+const updateUserPosition = (state: UserState, board: number[][]): UserState => {
+  const tryDirections = getNextDirection(state.direction);
+
+  for (const dir of tryDirections) {
+    const [dy, dx] = directions[dir];
+    const newX = state.x + dx;
+    const newY = state.y + dy;
+
+    if (canMove(newX, newY, board)) {
+      return { ...state, x: newX, y: newY, direction: dir };
+    }
+  }
+
+  return state;
+};
+
+const mkBoard = (): number[][] => {
+  return expandBoard(createInitialBoard());
+};
+
 export default function Home() {
-  const [userState, setUserState] = useState<{
-    x: number;
-    y: number;
-    direction: Direction;
-    directions: Record<Direction, number[]>;
-  }>({
-    x: 0,
-    y: 0,
-    direction: 'south',
-    directions: { north: [0, -1], east: [1, 0], south: [0, 1], west: [-1, 0] },
-  });
+  const [userState, setUserState] = useState<UserState>(initialUserState);
 
   const [board, setBoard] = useState<number[][]>([]);
   const [seconds, setSeconds] = useState(0);
@@ -74,14 +110,7 @@ export default function Home() {
     setBoard(mkBoard());
     isFinished = false;
     setSeconds(0);
-    setTimeout(() => {
-      setUserState({
-        x: 0,
-        y: 0,
-        direction: 'south',
-        directions: { north: [0, -1], east: [1, 0], south: [0, 1], west: [-1, 0] },
-      });
-    }, 0);
+    setUserState(initialUserState);
   };
 
   useEffect(() => {
@@ -97,44 +126,8 @@ export default function Home() {
 
   useEffect(() => {
     if (isFinished === true || seconds === 0) return;
-
-    setUserState((currentUserState) => {
-      const { x, y, direction, directions } = currentUserState;
-      const strDirections: Direction[] = ['north', 'east', 'south', 'west'];
-      const currentDirection = strDirections.indexOf(direction);
-
-      const rotate = (idx: number) => (idx + 4) % 4;
-
-      const directionsTOTry: Direction[] = [
-        strDirections[rotate(currentDirection + 1)],
-        strDirections[rotate(currentDirection)],
-        strDirections[rotate(currentDirection - 1)],
-        strDirections[rotate(currentDirection + 2)],
-      ];
-
-      for (const nextDir of directionsTOTry) {
-        const dx = directions[nextDir][1];
-        const dy = directions[nextDir][0];
-
-        if (
-          dx + x >= 0 &&
-          dx + x < board[0].length &&
-          dy + y >= 0 &&
-          dy + y < board.length &&
-          board[dy + y][dx + x] === 0
-        ) {
-          console.log(nextDir);
-          return {
-            ...currentUserState,
-            x: dx + x,
-            y: dy + y,
-            direction: nextDir,
-          };
-        }
-      }
-      return currentUserState;
-    });
-  }, [seconds, board, isFinished]);
+    setUserState((currentUserState) => updateUserPosition(currentUserState, board));
+  }, [board, isFinished, seconds]);
 
   return (
     <div className={styles.container}>
