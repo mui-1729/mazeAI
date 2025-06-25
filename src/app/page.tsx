@@ -36,7 +36,7 @@ const createInitialBoard = (): number[][] => {
 };
 
 const expandBoard = (baseBoard: number[][]): number[][] => {
-  const newBoard = [...baseBoard];
+  const newBoard = structuredClone(baseBoard);
 
   for (let y = 0; y < baseBoard.length; y++) {
     for (let x = 0; x < baseBoard[y].length; x++) {
@@ -51,6 +51,7 @@ const expandBoard = (baseBoard: number[][]): number[][] => {
         } else if (dir === 3 && x < baseBoard[y].length - 1) {
           newBoard[y][x + 1] = 1;
         }
+        console.log(newBoard);
       }
     }
   }
