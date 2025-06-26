@@ -1,6 +1,6 @@
 import React from 'react';
 import styles from '../app/page.module.css';
-import { Direction } from '../types';
+import type { Direction } from '../types';
 
 type CellProps = {
   cellType: number;
