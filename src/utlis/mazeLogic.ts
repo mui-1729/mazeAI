@@ -57,7 +57,7 @@ export const updateUserPosition = (state: UserState, board: number[][]): UserSta
   const tryDirections = getNextDirection(state.direction);
 
   for (const dir of tryDirections) {
-    const [dy, dx] = directions[dir];
+    const [dx, dy] = directions[dir];
     const newX = state.x + dx;
     const newY = state.y + dy;
 
